@@ -128,4 +128,4 @@ tmp/
 temp/
 *.tmp
 *.bak
-*.swp
+*.swpproject/data/processed/cve_records.jsonl
