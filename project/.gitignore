@@ -1,0 +1,11 @@
+backend/.env
+backend/.venv/
+backend/uploads/
+backend/reports/generated/
+backend/__pycache__/
+backend/niro_api/__pycache__/
+backend/tests/__pycache__/
+backend/.pytest_cache/
+frontend/.env
+frontend/node_modules/
+frontend/dist/
