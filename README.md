@@ -82,6 +82,51 @@ project/
 
 The application baseline works without a GPU and without a running Qwen model.
 
+## Qwen Model Download
+```bash 
+cd /workspaces/niro_ai/project
+source .venv/bin/activate
+```
+1. Create a new folder called `model`
+```bash 
+mkdir -p models/qwen_gguf
+```
+2. Install Hugging Face CLI and login
+
+```bash 
+pip install -U huggingface_hub
+hf auth login
+```
+
+3. Download the Qwen 3.5-9B GGUF Model
+
+```bash
+hf download bartowski/Qwen_Qwen3.5-9B-GGUF \
+  --include "Qwen_Qwen3.5-9B-Q4_K_M.gguf" \
+  --local-dir models/qwen_gguf
+```
+
+4. Install the llama-cpp server
+
+```bash 
+sudo apt-get update
+sudo apt-get install -y build-essential cmake
+
+CMAKE_ARGS="-DGGML_NATIVE=on" pip install "llama-cpp-python[server]"
+```
+
+5. Run Qwen model server
+
+```bash 
+python -m llama_cpp.server \
+  --model models/qwen_gguf/Qwen_Qwen3.5-9B-Q4_K_M.gguf \
+  --model_alias qwen3.5-9b \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --n_ctx 4096 \
+  --n_threads $(nproc)
+```
+
 ## Quick start
 
 The application lives in the repository's `project/` directory. From the repository root, enter it first:
