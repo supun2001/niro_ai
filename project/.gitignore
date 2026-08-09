@@ -9,3 +9,7 @@ backend/.pytest_cache/
 frontend/.env
 frontend/node_modules/
 frontend/dist/
+
+# Generated datasets
+/data/processed/
+/data/training/
