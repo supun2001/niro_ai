@@ -289,10 +289,37 @@ python -m pip install -r requirements-ml.txt
 
 The scripts currently expect these paths relative to the `project` directory:
 
-```text
-data/raw/cvelistV5/cves/                 # source CVE JSON
-data/processed/cve_records.jsonl         # parsed output
-data/training/cve_instruction_train.jsonl
+```bash
+mkdir -p data/raw
+mkdir -p data/processed
+mkdir -p data/training
+mkdir -p data/sample_inputs
+mkdir -p scripts
+mkdir -p adapters
+mkdir -p outputs
+mkdir -p models
+```
+Download CVE GitHub dataset (you can use any data set, that must be include in the `data/raw` directory)
+```bash
+rm -rf data/raw/cvelistV5
+
+git clone --filter=blob:none --sparse https://github.com/CVEProject/cvelistV5.git data/raw/cvelistV5
+
+cd data/raw/cvelistV5
+
+git sparse-checkout init --cone
+
+git sparse-checkout set \
+  cves/2017 \
+  cves/2018 \
+  cves/2019 \
+  cves/2020 \
+  cves/2021 \
+  cves/2022 \
+  cves/2023 \
+  cves/2024 \
+  cves/2025 \
+  cves/2026
 ```
 
 Prepare data:
@@ -304,6 +331,10 @@ python scripts/02_make_training_data.py
 
 Run the small experimental training script only in an environment with enough memory:
 
+Train the model with 1000 records (Change the number what ever want)
+```bash
+MAX_RECORDS=1000 python scripts/03_train_qwen_codespace_lora.py
+```
 ```bash
 python scripts/03_train_qwen_cpu_lora.py
 python scripts/04_test_lora_adapter.py
