@@ -129,3 +129,6 @@ temp/
 *.tmp
 *.bak
 *.swpproject/data/processed/cve_records.jsonl
+
+# VS Code
+.vscode/
