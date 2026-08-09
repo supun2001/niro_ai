@@ -85,7 +85,7 @@ The application baseline works without a GPU and without a running Qwen model.
 ## Qwen Model Download
 ```bash 
 cd /workspaces/niro_ai/project
-source .venv/bin/activate
+source .venv-ml/bin/activate
 ```
 1. Create a new folder called `model`
 ```bash 
