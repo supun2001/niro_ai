@@ -127,6 +127,130 @@ python -m llama_cpp.server \
   --n_threads $(nproc)
 ```
 
+
+## CVE data and model experiments
+
+Install the optional ML dependencies in a separate virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-ml.txt
+```
+
+The scripts currently expect these paths relative to the `project` directory:
+
+```bash
+mkdir -p data/raw
+mkdir -p data/processed
+mkdir -p data/training
+mkdir -p data/sample_inputs
+mkdir -p scripts
+mkdir -p adapters
+mkdir -p outputs
+mkdir -p models
+```
+Download CVE GitHub dataset (you can use any data set, that must be include in the `data/raw` directory)
+```bash
+rm -rf data/raw/cvelistV5
+
+git clone --filter=blob:none --sparse https://github.com/CVEProject/cvelistV5.git data/raw/cvelistV5
+
+cd data/raw/cvelistV5
+
+git sparse-checkout init --cone
+
+git sparse-checkout set \
+  cves/2017 \
+  cves/2018 \
+  cves/2019 \
+  cves/2020 \
+  cves/2021 \
+  cves/2022 \
+  cves/2023 \
+  cves/2024 \
+  cves/2025 \
+  cves/2026
+```
+
+Prepare data:
+
+```bash
+python scripts/01_parse_cves.py
+python scripts/02_make_training_data.py
+```
+
+Run the small experimental training script only in an environment with enough memory:
+
+Train the model with 1000 records (Change the number what ever want)
+```bash
+MAX_RECORDS=1000 python scripts/03_train_qwen_codespace_lora.py
+```
+```bash
+python scripts/03_train_qwen_cpu_lora.py
+python scripts/04_test_lora_adapter.py
+```
+
+The current script uses `Qwen/Qwen2.5-0.5B-Instruct` by default and can be changed through `MODEL_ID` during training. Model downloads require internet access. Do not commit base-model weights or private input data.
+
+## Testing and build commands
+
+### Backend
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+pytest -q
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run type-check
+npm run build
+```
+
+Preview the production frontend build:
+
+```bash
+npm run preview
+```
+
+The production frontend still needs `/api` to be reverse-proxied to Flask, or `VITE_API_BASE_URL` must be set to the deployed API URL before building.
+
+## Troubleshooting
+
+### The dashboard says “API offline”
+
+- Confirm Flask is running at `http://127.0.0.1:5000`.
+- Open `http://127.0.0.1:5000/api/health` directly.
+- Confirm Vite is running on port 5173 and its `/api` proxy was not changed.
+
+### Upload returns “Unsupported file”
+
+Rename/export the manifest using one of the supported exact names. General `.json`, PDF and text documents are intentionally rejected because this workflow analyses dependencies, not arbitrary CTI documents.
+
+### All dependencies show `Unknown`
+
+The prepared dataset is small and retrieval requires an exact package-name match. This result is expected for many manifests and does not imply safety. Check `dataset.records_indexed` in `/api/health`, then verify packages with current public advisory services.
+
+### Qwen output is missing
+
+Confirm `ENABLE_QWEN=true`, restart Flask, verify the model endpoint accepts OpenAI chat-completions requests, and make sure the `MODEL_NAME` alias exists on that server.
+
+## Safety and research limitations
+
+- Uses public defensive-security evidence only
+- Does not execute packages, malware or uploaded manifest content
+- Does not develop or test exploits
+- Does not collect credentials or personal data
+- Does not confirm vulnerability applicability by semantic version yet
+- Does not claim that a zero-day exists
+- Requires a human analyst to validate evidence, versions, patches and source freshness
+
+
 ## Quick start
 
 The application lives in the repository's `project/` directory. From the repository root, enter it first:
@@ -321,128 +445,6 @@ MODEL_NAME=qwen2.5-0.5b-instruct
 Restart Flask after changing the environment. If the model server fails or returns invalid JSON, analysis continues with the baseline and adds a warning to the report.
 
 The adapter under `adapters/qwen_codespace_cve_lora_adapter/` is a PEFT LoRA adapter, not a standalone model. Load it with the same base model as the training script before exposing it through a compatible inference server. `scripts/04_test_lora_adapter.py` shows the direct Transformers/PEFT loading sequence.
-
-## CVE data and model experiments
-
-Install the optional ML dependencies in a separate virtual environment:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-ml.txt
-```
-
-The scripts currently expect these paths relative to the `project` directory:
-
-```bash
-mkdir -p data/raw
-mkdir -p data/processed
-mkdir -p data/training
-mkdir -p data/sample_inputs
-mkdir -p scripts
-mkdir -p adapters
-mkdir -p outputs
-mkdir -p models
-```
-Download CVE GitHub dataset (you can use any data set, that must be include in the `data/raw` directory)
-```bash
-rm -rf data/raw/cvelistV5
-
-git clone --filter=blob:none --sparse https://github.com/CVEProject/cvelistV5.git data/raw/cvelistV5
-
-cd data/raw/cvelistV5
-
-git sparse-checkout init --cone
-
-git sparse-checkout set \
-  cves/2017 \
-  cves/2018 \
-  cves/2019 \
-  cves/2020 \
-  cves/2021 \
-  cves/2022 \
-  cves/2023 \
-  cves/2024 \
-  cves/2025 \
-  cves/2026
-```
-
-Prepare data:
-
-```bash
-python scripts/01_parse_cves.py
-python scripts/02_make_training_data.py
-```
-
-Run the small experimental training script only in an environment with enough memory:
-
-Train the model with 1000 records (Change the number what ever want)
-```bash
-MAX_RECORDS=1000 python scripts/03_train_qwen_codespace_lora.py
-```
-```bash
-python scripts/03_train_qwen_cpu_lora.py
-python scripts/04_test_lora_adapter.py
-```
-
-The current script uses `Qwen/Qwen2.5-0.5B-Instruct` by default and can be changed through `MODEL_ID` during training. Model downloads require internet access. Do not commit base-model weights or private input data.
-
-## Testing and build commands
-
-### Backend
-
-```bash
-cd backend
-source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-pytest -q
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm run type-check
-npm run build
-```
-
-Preview the production frontend build:
-
-```bash
-npm run preview
-```
-
-The production frontend still needs `/api` to be reverse-proxied to Flask, or `VITE_API_BASE_URL` must be set to the deployed API URL before building.
-
-## Troubleshooting
-
-### The dashboard says “API offline”
-
-- Confirm Flask is running at `http://127.0.0.1:5000`.
-- Open `http://127.0.0.1:5000/api/health` directly.
-- Confirm Vite is running on port 5173 and its `/api` proxy was not changed.
-
-### Upload returns “Unsupported file”
-
-Rename/export the manifest using one of the supported exact names. General `.json`, PDF and text documents are intentionally rejected because this workflow analyses dependencies, not arbitrary CTI documents.
-
-### All dependencies show `Unknown`
-
-The prepared dataset is small and retrieval requires an exact package-name match. This result is expected for many manifests and does not imply safety. Check `dataset.records_indexed` in `/api/health`, then verify packages with current public advisory services.
-
-### Qwen output is missing
-
-Confirm `ENABLE_QWEN=true`, restart Flask, verify the model endpoint accepts OpenAI chat-completions requests, and make sure the `MODEL_NAME` alias exists on that server.
-
-## Safety and research limitations
-
-- Uses public defensive-security evidence only
-- Does not execute packages, malware or uploaded manifest content
-- Does not develop or test exploits
-- Does not collect credentials or personal data
-- Does not confirm vulnerability applicability by semantic version yet
-- Does not claim that a zero-day exists
-- Requires a human analyst to validate evidence, versions, patches and source freshness
 
 ## Author
 
