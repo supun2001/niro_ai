@@ -85,7 +85,7 @@ The application baseline works without a GPU and without a running Qwen model.
 ## Qwen Model Download
 ```bash 
 cd /workspaces/niro_ai/project
-source .venv-ml/bin/activate
+source .venv/bin/activate
 ```
 1. Create a new folder called `model`
 ```bash 
@@ -327,8 +327,8 @@ The adapter under `adapters/qwen_codespace_cve_lora_adapter/` is a PEFT LoRA ada
 Install the optional ML dependencies in a separate virtual environment:
 
 ```bash
-python3 -m venv .venv-ml
-source .venv-ml/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 python -m pip install -r requirements-ml.txt
 ```
 
