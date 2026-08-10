@@ -74,6 +74,8 @@ class AnalysisService:
         if ai_warning:
             notes.append(ai_warning)
 
+        suggestions = self._generate_suggestions(assessments, baseline_summary)
+
         return {
             "report_id": str(uuid4()),
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -82,6 +84,7 @@ class AnalysisService:
             "summary": baseline_summary,
             "assessments": assessments,
             "ai_analysis": ai_analysis,
+            "suggestions": suggestions,
             "coverage": {
                 "dataset": self.cve_index.data_path.name,
                 "records_indexed": self.cve_index.record_count,
@@ -124,12 +127,84 @@ class AnalysisService:
             "installed_version": dependency.version,
             "dependency_group": dependency.group,
             "risk_level": risk_level,
-            "confidence": round(confidence, 2),
+            "confidence": confidence,
             "candidate_zero_day_indicator": candidate_indicator,
             "known_vulnerabilities": matches,
             "recommendation": recommendation,
             "human_review_required": True,
         }
+
+    def _generate_suggestions(self, assessments: list[dict], summary: dict) -> list[dict]:
+        """Generate actionable remediation suggestions based on the analysis."""
+        suggestions = []
+
+        # High-risk packages that need immediate attention
+        high_risk_packages = [a for a in assessments if a["risk_level"] == "High"]
+        if high_risk_packages:
+            suggestions.append({
+                "priority": "critical",
+                "title": "Review and patch high-risk dependencies",
+                "description": f"Found {len(high_risk_packages)} package(s) with high-severity vulnerabilities. These should be prioritized for immediate review and patching.",
+                "packages": [p["package"] for p in high_risk_packages[:5]],
+                "action": "Review advisories and apply latest patches immediately"
+            })
+
+        # Medium-risk packages
+        medium_risk_packages = [a for a in assessments if a["risk_level"] == "Medium"]
+        if medium_risk_packages:
+            suggestions.append({
+                "priority": "high",
+                "title": "Plan updates for medium-risk dependencies",
+                "description": f"Found {len(medium_risk_packages)} package(s) with medium-severity vulnerabilities. Include these in your next maintenance cycle.",
+                "packages": [p["package"] for p in medium_risk_packages[:5]],
+                "action": "Schedule updates to patched versions"
+            })
+
+        # Dependencies with no local match
+        unknown_packages = [a for a in assessments if a["risk_level"] == "Unknown"]
+        if unknown_packages and len(unknown_packages) > summary["dependency_count"] * 0.3:
+            suggestions.append({
+                "priority": "medium",
+                "title": "Verify dependencies with no local CVE data",
+                "description": f"{len(unknown_packages)} dependencies have no matches in the local CVE dataset. This doesn't mean they're safe—verify using external advisory sources.",
+                "action": "Cross-check packages against NVD, GitHub Security Advisories, or vendor security feeds"
+            })
+
+        # Overall risk assessment recommendations
+        if summary["overall_risk_level"] == "High":
+            suggestions.append({
+                "priority": "critical",
+                "title": "Urgent: Overall project risk is high",
+                "description": "This project contains dependencies with confirmed high-severity vulnerabilities. Immediate action is required.",
+                "action": "Establish a hotfix process and prioritize CVE patching"
+            })
+        elif summary["overall_risk_level"] == "Medium":
+            suggestions.append({
+                "priority": "high",
+                "title": "Medium-risk exposure detected",
+                "description": "Plan a comprehensive dependency update cycle to reduce medium-severity risks.",
+                "action": "Schedule maintenance window for dependency updates"
+            })
+
+        # Low-risk or no matches - proactive recommendation
+        if summary["overall_risk_level"] == "Low" or summary["overall_risk_level"] == "Unknown":
+            suggestions.append({
+                "priority": "low",
+                "title": "Establish continuous monitoring",
+                "description": "Even with low current risk, dependencies should be monitored for new vulnerabilities.",
+                "action": "Set up automated dependency scanning and security alerts"
+            })
+
+        # Too many dependencies with matches might indicate outdated ecosystem
+        if summary["dependencies_with_matches"] > summary["dependency_count"] * 0.4:
+            suggestions.append({
+                "priority": "high",
+                "title": "Consider a major dependency refresh",
+                "description": f"Over 40% of dependencies ({summary['dependencies_with_matches']}/{summary['dependency_count']}) have known vulnerabilities.",
+                "action": "Evaluate newer versions or alternative packages"
+            })
+
+        return suggestions
 
 
 def _overall_risk(assessments: list[dict]) -> str:

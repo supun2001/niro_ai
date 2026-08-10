@@ -26,6 +26,14 @@ export interface DependencyAssessment {
   human_review_required: boolean
 }
 
+export interface Suggestion {
+  priority: 'critical' | 'high' | 'medium' | 'low'
+  title: string
+  description: string
+  packages?: string[]
+  action: string
+}
+
 export interface AnalysisReport {
   report_id: string
   generated_at: string
@@ -41,6 +49,7 @@ export interface AnalysisReport {
   }
   assessments: DependencyAssessment[]
   ai_analysis: Record<string, unknown> | null
+  suggestions?: Suggestion[]
   coverage: {
     dataset: string
     records_indexed: number

@@ -23,6 +23,16 @@ const visibleAssessments = computed(() => filteredAssessments.value.slice(0, vis
 
 const riskOptions: Array<'All' | RiskLevel> = ['All', 'High', 'Medium', 'Low', 'Unknown']
 
+const suggestionsByPriority = computed(() => {
+  const suggestions = props.report.suggestions || []
+  return {
+    critical: suggestions.filter(s => s.priority === 'critical'),
+    high: suggestions.filter(s => s.priority === 'high'),
+    medium: suggestions.filter(s => s.priority === 'medium'),
+    low: suggestions.filter(s => s.priority === 'low')
+  }
+})
+
 const percentage = (count: number): number => {
   if (!props.report.summary.dependency_count) return 0
   return Math.max(2, Math.round((count / props.report.summary.dependency_count) * 100))
@@ -31,6 +41,26 @@ const percentage = (count: number): number => {
 const confidencePercent = computed(() => Math.round(props.report.summary.confidence * 100))
 
 const riskClass = (level: string): string => `risk-${level.toLowerCase()}`
+
+const priorityIcon = (priority: string): string => {
+  const icons: Record<string, string> = {
+    critical: 'pi-exclamation-circle',
+    high: 'pi-alert-circle',
+    medium: 'pi-info-circle',
+    low: 'pi-check-circle'
+  }
+  return icons[priority] || 'pi-info-circle'
+}
+
+const priorityColor = (priority: string): string => {
+  const colors: Record<string, string> = {
+    critical: '#c84832',
+    high: '#c17b18',
+    medium: '#0066cc',
+    low: '#2b7a5d'
+  }
+  return colors[priority] || '#666'
+}
 
 const formatDate = (value: string): string => new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
@@ -129,6 +159,42 @@ const vulnerabilityLabel = (assessment: DependencyAssessment): string => {
           </strong>
         </div>
       </article>
+    </div>
+
+    <div v-if="Object.values(suggestionsByPriority).some(arr => arr.length)" class="suggestions-panel">
+      <div class="suggestions-header">
+        <span class="eyebrow">Action items</span>
+        <h3>Recommended remediation steps</h3>
+      </div>
+      <div class="suggestions-list">
+        <div
+          v-for="suggestion in [...suggestionsByPriority.critical, ...suggestionsByPriority.high, ...suggestionsByPriority.medium, ...suggestionsByPriority.low]"
+          :key="suggestion.title"
+          class="suggestion-card"
+          :style="{ borderLeftColor: priorityColor(suggestion.priority) }"
+        >
+          <div class="suggestion-header">
+            <div class="suggestion-icon" :style="{ color: priorityColor(suggestion.priority) }">
+              <i :class="`pi ${priorityIcon(suggestion.priority)}`" />
+            </div>
+            <div>
+              <strong>{{ suggestion.title }}</strong>
+              <span class="priority-badge" :style="{ color: priorityColor(suggestion.priority) }">{{ suggestion.priority }}</span>
+            </div>
+          </div>
+          <p>{{ suggestion.description }}</p>
+          <div v-if="suggestion.packages" class="suggestion-packages">
+            <span class="packages-label">Affected:</span>
+            <div class="package-tags">
+              <code v-for="pkg in suggestion.packages" :key="pkg">{{ pkg }}</code>
+            </div>
+          </div>
+          <div class="suggestion-action">
+            <i class="pi pi-arrow-right" />
+            <span>{{ suggestion.action }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <article class="panel dependency-panel">
@@ -268,6 +334,24 @@ const vulnerabilityLabel = (assessment: DependencyAssessment): string => {
 .coverage-line strong { color: #a64b3b; }
 .coverage-line strong.available { color: #2b7a5d; }
 
+.suggestions-panel { margin-top: 1rem; padding: 1.6rem; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
+.suggestions-header { margin-bottom: 1.4rem; }
+.suggestions-header span { color: var(--accent-dark); font-size: .68rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.suggestions-header h3 { margin: .35rem 0 0; font-size: 1.18rem; }
+.suggestions-list { display: grid; gap: 1rem; }
+.suggestion-card { padding: 1.2rem; border-left: 4px solid #c84832; border-radius: 10px; background: #fafaf8; }
+.suggestion-header { display: flex; align-items: flex-start; gap: .8rem; margin-bottom: .8rem; }
+.suggestion-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 8px; flex: 0 0 auto; opacity: 0.2; font-size: 1rem; }
+.suggestion-header strong { display: block; margin-bottom: .2rem; }
+.priority-badge { display: inline-block; padding: .2rem .5rem; border-radius: 4px; font-size: .65rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
+.suggestion-card p { margin: 0 0 1rem; color: var(--muted); line-height: 1.5; font-size: .85rem; }
+.suggestion-packages { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .8rem; }
+.packages-label { color: var(--muted); font-size: .75rem; font-weight: 600; }
+.package-tags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.package-tags code { padding: .25rem .5rem; border-radius: 4px; background: #eceeea; font-size: .7rem; color: var(--ink-soft); }
+.suggestion-action { display: flex; align-items: center; gap: .5rem; color: var(--accent-dark); font-size: .78rem; font-weight: 600; }
+.suggestion-action i { font-size: .65rem; }
+
 .dependency-panel { margin-top: 1rem; padding: 0; overflow: hidden; }
 .table-toolbar { padding: 1.5rem; border-bottom: 1px solid var(--line); }
 .filters { display: flex; align-items: center; gap: .8rem; }
@@ -276,6 +360,7 @@ const vulnerabilityLabel = (assessment: DependencyAssessment): string => {
 .risk-filters { display: flex; padding: 3px; border-radius: 9px; background: #edeeda; }
 .risk-filters button { padding: .45rem .65rem; border: 0; border-radius: 7px; cursor: pointer; color: var(--muted); background: transparent; font-size: .72rem; }
 .risk-filters button.active { color: var(--ink); background: #fff; box-shadow: 0 1px 4px #18322818; }
+
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th { padding: .8rem 1rem; color: var(--muted); background: #f7f7f3; font-size: .67rem; letter-spacing: .06em; text-transform: uppercase; }

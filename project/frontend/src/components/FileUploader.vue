@@ -339,10 +339,10 @@ const startAnalysis = async (): Promise<void> => {
 .progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .2s; }
 .progress-track span.processing { width: 45% !important; animation: processing 1.1s ease-in-out infinite alternate; }
 
-.upload-actions { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-top: 1.4rem; }
-.upload-actions p { display: flex; align-items: center; gap: .5rem; margin: 0; color: var(--muted); font-size: .78rem; }
-.upload-actions :deep(.p-button) { padding: .85rem 1.2rem; border: 0; border-radius: 10px; background: var(--ink); }
-.upload-actions :deep(.p-button:not(:disabled):hover) { background: var(--accent-dark); }
+.upload-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.4rem; }
+.upload-actions p { display: flex; align-items: center; gap: .5rem; margin: 0; color: var(--muted); font-size: .78rem; flex: 1 1 auto; min-width: 200px; }
+.upload-actions :deep(.p-button) { padding: .85rem 1.2rem; border: 0; border-radius: 10px; background: var(--ink); flex: 0 0 auto; white-space: nowrap; color: #fff; }
+.upload-actions :deep(.p-button:not(:disabled):hover) { background: var(--accent-dark); color: #fff; }
 
 @keyframes processing { from { transform: translateX(0); } to { transform: translateX(120%); } }
 
@@ -350,6 +350,8 @@ const startAnalysis = async (): Promise<void> => {
   .upload-heading, .upload-actions { align-items: stretch; flex-direction: column; }
   .private-badge { align-self: flex-start; }
   .drop-zone { min-height: 260px; padding: 1.25rem; }
-  .upload-actions :deep(.p-button) { justify-content: center; }
+  .upload-actions { flex-direction: column; align-items: center; }
+  .upload-actions p { min-width: auto; }
+  .upload-actions :deep(.p-button) { width: 100%; justify-content: center; }
 }
 </style>
