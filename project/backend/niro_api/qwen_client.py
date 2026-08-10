@@ -24,10 +24,9 @@ class QwenClient:
             return None, None
 
         prompt = (
-            "Review this public dependency vulnerability evidence. Return one valid JSON "
-            "object with keys summary, candidate_zero_day_indicator, future_risk, "
-            "confidence, recommendation and human_review_required. Do not claim a "
-            "confirmed zero-day without explicit evidence.\n\n"
+            "Return one compact JSON object with keys summary, candidate_zero_day_indicator, "
+            "future_risk, confidence, recommendation and human_review_required. "
+            "Use only the evidence below.\n\n"
             + json.dumps(evidence, ensure_ascii=False)
         )
 

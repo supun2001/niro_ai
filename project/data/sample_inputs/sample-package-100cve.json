@@ -1,0 +1,66 @@
+{
+  "name": "sample-package-100cve",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A real npm manifest sample for testing the Niro AI CVE analysis workflow.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "axios": "^1.7.4",
+    "lodash": "^4.17.21",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.2",
+    "commander": "^12.2.0",
+    "chalk": "^5.0.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10",
+    "typescript": "^5.6.3",
+    "eslint": "^9.0.1",
+    "jest": "^29.7.0",
+    "prettier": "^3.15.0",
+    "nodemon": "^3.0.1"
+  },
+  "packageSets": {
+    "default": {
+      "description": "Common production and development dependencies",
+      "dependencies": {
+        "express": "^4.19.2",
+        "axios": "^1.7.4",
+        "lodash": "^4.17.21",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+      },
+      "devDependencies": {
+        "vite": "^5.4.10",
+        "typescript": "^5.6.3",
+        "eslint": "^9.0.1"
+      }
+    },
+    "cve-themed": {
+      "description": "Dependency names and versions similar to the 100-record CVE training set",
+      "dependencies": {
+        "fastify-reply-from": "<9.6.0",
+        "changed-files": "<41.0.0",
+        "hertzbeat": "<1.4.1",
+        "quotes-for-woocommerce": "2.0.1",
+        "mailchimp-for-wp": "4.9.9",
+        "woocommerce-ship-to-multiple-addresses": "3.8.9",
+        "weforms": "1.6.18",
+        "everest-forms": "2.0.3",
+        "fluent-support": "1.7.6",
+        "split-test-for-elementor": "1.6.9"
+      },
+      "devDependencies": {
+        "power-pdf": "5.0.0.57 (5.0.0.10.0.23307)",
+        "magic-ui": "6.0",
+        "jvm-rich-text-icons": "1.2.6"
+      }
+    }
+  }
+}

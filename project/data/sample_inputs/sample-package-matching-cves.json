@@ -1,0 +1,21 @@
+{
+  "name": "sample-package-matching-cves",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A manifest that should match the current local CVE dataset exactly.",
+  "dependencies": {
+    "split-test-for-elementor": "1.6.9",
+    "everest-forms": "2.0.3",
+    "weforms": "1.6.18",
+    "changed-files": "40.0.0",
+    "power-pdf": "5.0.0.57 (5.0.0.10.0.23307)",
+    "magic-ui": "6.0"
+  },
+  "devDependencies": {
+    "hertzbeat": "<1.4.1",
+    "quotes-for-woocommerce": "2.0.1",
+    "mailchimp-for-wp": "4.9.9",
+    "woocommerce-ship-to-multiple-addresses": "3.8.9",
+    "fluent-support": "1.7.6"
+  }
+}

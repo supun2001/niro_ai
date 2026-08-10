@@ -5,7 +5,7 @@ from tqdm import tqdm
 INPUT_FILE = Path("data/processed/cve_records.jsonl")
 OUTPUT_FILE = Path("data/training/cve_instruction_train.jsonl")
 
-MAX_RECORDS = 3000
+MAX_RECORDS = 100
 
 
 def build_input(record):

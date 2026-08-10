@@ -39,10 +39,28 @@ class AnalysisService:
         }
 
         qwen_input = {
-            "summary": baseline_summary,
+            "summary": {
+                "dependency_count": baseline_summary["dependency_count"],
+                "dependencies_with_matches": baseline_summary["dependencies_with_matches"],
+                "known_vulnerability_count": baseline_summary["known_vulnerability_count"],
+                "overall_risk_level": baseline_summary["overall_risk_level"],
+            },
             "matched_dependencies": [
-                item for item in assessments if item["known_vulnerabilities"]
-            ][:25],
+                {
+                    "package": item["package"],
+                    "risk_level": item["risk_level"],
+                    "installed_version": item["installed_version"],
+                    "known_vulnerabilities": [
+                        {
+                            "cve_id": vuln.get("cve_id"),
+                            "severity": vuln.get("severity"),
+                            "summary": vuln.get("summary"),
+                        }
+                        for vuln in item["known_vulnerabilities"][:2]
+                    ],
+                }
+                for item in assessments if item["known_vulnerabilities"]
+            ][:10],
         }
         ai_analysis, ai_warning = self.qwen_client.analyze(qwen_input)
 
