@@ -133,6 +133,7 @@ python -m llama_cpp.server \
 Install the optional ML dependencies in a separate virtual environment:
 
 ```bash
+cd project
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-ml.txt
